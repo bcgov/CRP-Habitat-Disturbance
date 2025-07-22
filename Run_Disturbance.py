@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import pandasql
 import getpass
+from dotenv import load_dotenv
 ## If you get a warning about pandas not exisitng/installed write this line of code in the termianl and run it
 ## python -m pip install "pandasql"
 
@@ -24,17 +25,6 @@ configFile = r"config_disturbance_2023.json"
 arcpy.env.parallelProcessingFactor = "50%"
 arcpy.env.overwriteOutput = True
 
-def readConfig(configFile):#returns dictionary of parameters
-    """
-    reads the config file to dictionary
-    """
-    with open(configFile) as json_file:
-        try:
-            d = json.load(json_file)
-        except:
-            print ("failed to parse configuration")
-        else:
-            return d['params']
 def layers():
     disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file)
     buffer_disturbance()
@@ -129,30 +119,33 @@ def protection_table():
         make_sheet_base(intersect_layer, unique_value, aoi_location, csv_dir)
         protection_grouping(csv_dir, csv_protect_output, table_group)
         protection_classes(csv_dir, csv_protect_output, table_group)
-########
-readConfig(configFile)
-cfg = readConfig(configFile)
-#####################################
-# Modified for lists (running over multiple ranges at once)
-workspace = cfg[0]['workspace']
-connPath = cfg[0]['connPath']
-connFile = cfg[0]['connFile']
-username = "BOYANLIU"
-password = getpass.getpass()
-aoi_location = cfg[0]["aoi_location"]
-layer_name_list = cfg[0]["layer_name"]
-unique_value = cfg[0]["unique_value"]
-dissolve_values = cfg[0]["dissolve_values"]
-keep_list = cfg[0]["keep_list"]
-csv_dir = cfg[0]["csv_dir"]
-intersect_layer_list = cfg[0]["intersect_layer"]
-csv_output_name_list = cfg[0]["csv_output_name"]
-table_group = cfg[0]["table_group"]
-final_output_list = cfg[0]["final_output"]
-csv_protect_output_list = cfg[0]["csv_protect_output"]
-designated_lands = cfg[0]["designated_lands"]
-roads_file = cfg[0]["roads_file"]
-bcce_file = cfg[0]["bcce_file"]
+
+load_dotenv()
+root_dir=os.getenv("ROOT_DIR")
+workspace= os.path.join(root_dir, os.getenv("OUTPUT_GDB"))
+aoi_location = os.path.join(root_dir, os.getenv("AOI_GDB"))
+csv_dir = os.path.join(root_dir, os.getenv("CSV_DIR")) #Need to write in if not os.path exists create folder or change to our folder structure
+
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
+layer_name_list = os.getenv("LAYER_NAME").split(",")
+unique_value = os.getenv("UNIQUE_VALUE")
+dissolve_values = os.getenv("DISSOLVE_VALUES").split(",")
+keep_list =  os.getenv("KEEP_LIST").split(",")
+intersect_layer_list = os.getenv("INTERSECT_LAYER").split(",")
+table_group= os.getenv("TABLE_GROUP").split(",")
+designated_lands= os.getenv("DESIGNATED_LANDS") #write in os path exists to verify this is correct
+roads_file = os.getenv("ROADS_FILE") #write in os path exists to verify this is correct
+bcce_file = os.getenv("BCCE_FILE") #write in os path exists to verify this is correct
+
+connPath = "T:\\"       
+connFile = "BCGW.sde"
+
+#make these dynamic 
+csv_output_name_list = cfg[0]["csv_output_name"]    # "csv_output_name": ["Groundhog_1005"],
+final_output_list = cfg[0]["final_output"] # "final_output": ["Groundhog_final"],
+csv_protect_output_list = cfg[0]["csv_protect_output"] # "csv_protect_output": ["Groundhog_protect"],
+
 ######################################
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
