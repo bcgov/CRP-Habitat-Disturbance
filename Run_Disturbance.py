@@ -1,20 +1,14 @@
 import arcpy
 import os
-import re
-import json
-import logging
-import smtplib
-import socket
 import pandas as pd
 import numpy as np
-import pandasql
-import getpass
 from dotenv import load_dotenv
 ## If you get a warning about pandas not exisitng/installed write this line of code in the termianl and run it
 ## python -m pip install "pandasql"
 
 
 from arcpy import env
+from Data_prep import prepare_data
 from disturbance_layer import disturbance_aoi, buffer_disturbance, intersect, delete, interim_clean_up, delete_layers, disturbance_flatten, disturbance_field_mapping, disturbance_cleanup, disturbance_buffer_flatten,disturbance_buffer_field_mapping, disturbance_buffer_cleanup, identity
 from table_create import combine_loose_sheets, make_sheet_base, static_grouping
 from protection_layer import protect_aoi, gather_protection, flatten_protection, field_mapping, clean_and_join, combine
@@ -32,11 +26,15 @@ root_dir=os.getenv("ROOT_DIR")
 workspace= os.path.join(root_dir, os.getenv("OUTPUT_GDB"))
 aoi_location = os.path.join(root_dir, os.getenv("AOI_GDB"))
 csv_dir = os.path.join(root_dir,'deliverables','report') #Need to write in if not os.path exists create folder or change to our folder structure
+if not os.path.exists(csv_dir):
+    os.makedirs(csv_dir)
+
 
 #bcgw connection
 username = os.getenv("USERNAME")
 password = os.getenv("PASSWORD")
-connPath = "T:\\"       
+bcgw_inst=os.getenv("BCGW_INST")
+connPath = r'T:\\'
 connFile = "BCGW.sde"
 
 #values
@@ -51,7 +49,8 @@ table_group= os.getenv("TABLE_GROUP").split(",")
 designated_lands= os.getenv("DESIGNATED_LANDS") #write in os path exists to verify this is correct
 roads_file = os.getenv("ROADS_FILE") #write in os path exists to verify this is correct
 bcce_file = os.getenv("BCCE_FILE") #write in os path exists to verify this is correct
-
+linework=os.getenv("LINE_WORK") #write in os path exists to verify this is correct
+range_bounds=os.getenv("RANGE_BOUNDS")
 
 # Generate dynamic output names based on layer names
 csv_output_name_list = []
@@ -70,7 +69,7 @@ for layer_name in layer_name_list:
 
 
 def layers():
-    disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file)
+    disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file,bcgw_inst)
     buffer_disturbance()
     intersect(unique_value, aoi_location, layer_name, dissolve_values)
     delete()
@@ -163,6 +162,9 @@ def protection_table():
         make_sheet_base(intersect_layer, unique_value, aoi_location, csv_dir)
         protection_grouping(csv_dir, csv_protect_output, table_group)
         protection_classes(csv_dir, csv_protect_output, table_group)
+
+
+prepare_data(root_dir, linework, range_bounds, designated_lands, connPath, username, password, bcgw_inst )
 
 ######################################
 arcpy.env.workspace = workspace

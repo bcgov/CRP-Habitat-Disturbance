@@ -28,13 +28,22 @@ import socket
 import pandas as pd
 
 arcpy.env.overwriteOutput = True
-def disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file):
-
-    arcpy.CreateDatabaseConnection_management(connPath, connFile, "ORACLE", "bcgw.bcgov/idwprod1.bcgov", "", username, password)
+def disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file,inst):
     bcgwConn = os.path.join(connPath, connFile)
-    print("Connected to the BCGW")
+    try:
+                arcpy.CreateDatabaseConnection_management(out_folder_path=connPath,
+                                                        out_name=connFile,
+                                                        database_platform='ORACLE',
+                                                        instance=inst,
+                                                        account_authentication='DATABASE_AUTH',
+                                                        username=username,
+                                                        password=password,
+                                                        save_user_pass='DO_NOT_SAVE_USERNAME')
+                print(' new SDE connection')
+    except:
+        print('Database connection already exists')
 
-    aoi = (aoi_location + layer_name)
+    aoi = (os.path.join(aoi_location,layer_name))
 
     search_word = "{}".format(unique_value)
 
