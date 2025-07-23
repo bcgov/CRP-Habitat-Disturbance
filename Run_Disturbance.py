@@ -20,10 +20,54 @@ from table_create import combine_loose_sheets, make_sheet_base, static_grouping
 from protection_layer import protect_aoi, gather_protection, flatten_protection, field_mapping, clean_and_join, combine
 from protection_table import tabletotable, combine_loose_herds, protection_grouping, protection_classes
 from disturbance_protection_combine import combine_disturbance_and_protection, clean_up
-configFile = r"config_disturbance_2023.json"
+
 
 arcpy.env.parallelProcessingFactor = "50%"
 arcpy.env.overwriteOutput = True
+
+####config###
+load_dotenv()
+#paths
+root_dir=os.getenv("ROOT_DIR")
+workspace= os.path.join(root_dir, os.getenv("OUTPUT_GDB"))
+aoi_location = os.path.join(root_dir, os.getenv("AOI_GDB"))
+csv_dir = os.path.join(root_dir,'deliverables','report') #Need to write in if not os.path exists create folder or change to our folder structure
+
+#bcgw connection
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
+connPath = "T:\\"       
+connFile = "BCGW.sde"
+
+#values
+layer_name_list = os.getenv("LAYER_NAME").split(",")
+unique_value = os.getenv("UNIQUE_VALUE")
+dissolve_values = os.getenv("DISSOLVE_VALUES").split(",")
+keep_list =  os.getenv("KEEP_LIST").split(",")
+intersect_layer_list = os.getenv("INTERSECT_LAYER").split(",")
+table_group= os.getenv("TABLE_GROUP").split(",")
+
+#layers
+designated_lands= os.getenv("DESIGNATED_LANDS") #write in os path exists to verify this is correct
+roads_file = os.getenv("ROADS_FILE") #write in os path exists to verify this is correct
+bcce_file = os.getenv("BCCE_FILE") #write in os path exists to verify this is correct
+
+
+# Generate dynamic output names based on layer names
+csv_output_name_list = []
+final_output_list = []
+csv_protect_output_list = []
+
+for layer_name in layer_name_list:
+    # Clean layer name for file naming (same logic used in spagh_meatball function)
+    clean_name = layer_name.replace(" ", "").replace("-", "").replace(":", "").replace("/", "")
+    
+    # Generate output names based on pattern from comments
+    csv_output_name_list.append(f"{clean_name}_1005")  # or use appropriate suffix
+    final_output_list.append(f"{clean_name}_final")
+    csv_protect_output_list.append(f"{clean_name}_protect")
+###end config ####
+
 
 def layers():
     disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file)
@@ -120,36 +164,12 @@ def protection_table():
         protection_grouping(csv_dir, csv_protect_output, table_group)
         protection_classes(csv_dir, csv_protect_output, table_group)
 
-load_dotenv()
-root_dir=os.getenv("ROOT_DIR")
-workspace= os.path.join(root_dir, os.getenv("OUTPUT_GDB"))
-aoi_location = os.path.join(root_dir, os.getenv("AOI_GDB"))
-csv_dir = os.path.join(root_dir, os.getenv("CSV_DIR")) #Need to write in if not os.path exists create folder or change to our folder structure
-
-username = os.getenv("USERNAME")
-password = os.getenv("PASSWORD")
-layer_name_list = os.getenv("LAYER_NAME").split(",")
-unique_value = os.getenv("UNIQUE_VALUE")
-dissolve_values = os.getenv("DISSOLVE_VALUES").split(",")
-keep_list =  os.getenv("KEEP_LIST").split(",")
-intersect_layer_list = os.getenv("INTERSECT_LAYER").split(",")
-table_group= os.getenv("TABLE_GROUP").split(",")
-designated_lands= os.getenv("DESIGNATED_LANDS") #write in os path exists to verify this is correct
-roads_file = os.getenv("ROADS_FILE") #write in os path exists to verify this is correct
-bcce_file = os.getenv("BCCE_FILE") #write in os path exists to verify this is correct
-
-connPath = "T:\\"       
-connFile = "BCGW.sde"
-
-#make these dynamic 
-csv_output_name_list = cfg[0]["csv_output_name"]    # "csv_output_name": ["Groundhog_1005"],
-final_output_list = cfg[0]["final_output"] # "final_output": ["Groundhog_final"],
-csv_protect_output_list = cfg[0]["csv_protect_output"] # "csv_protect_output": ["Groundhog_protect"],
-
 ######################################
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 ######################################
+
+
 iterate = 0
 for layer_name in layer_name_list:
 
