@@ -17,9 +17,9 @@ def prepare_data(working_loc, linework, range_bound, designated_lands_loc, outpu
     wrkspc_loc = os.path.join(working_loc, "AOI.gdb")
     desginated_loc=os.path.join(working_loc, "updated_designated.gdb")
 
-    if arcpy.exists(os.path.join(desginated_loc,"designations_ogma_update_221013")):
+    if arcpy.Exists(os.path.join(desginated_loc,"designations_ogma_update_221013")):
         print('data prep already completed')
-        quit
+        return
 
     arcpy.env.parallelProcessingFactor = "50%"
     arcpy.env.overwriteOutput = True

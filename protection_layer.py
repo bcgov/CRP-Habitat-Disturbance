@@ -27,7 +27,7 @@ import socket
 import pandas as pd
 # Function goes through area of interest (AOI) to start the intersection of protection layers
 def protect_aoi(aoi_location, layer_name, unique_value):
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
 
     search_word = "{}".format(unique_value)
 

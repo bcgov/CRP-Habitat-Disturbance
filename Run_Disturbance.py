@@ -23,7 +23,13 @@ arcpy.env.overwriteOutput = True
 load_dotenv()
 #paths
 root_dir=os.getenv("ROOT_DIR")
-workspace= os.path.join(root_dir, os.getenv("OUTPUT_GDB"))
+out_gdb=os.getenv("OUTPUT_GDB")
+workspace= os.path.join(root_dir, out_gdb)
+if not os.path.exists(workspace):
+    print("Creating output GDB in working location")
+    arcpy.management.CreateFileGDB(out_folder_path=root_dir, out_name=out_gdb)
+else:
+    print("Using existing output GDB in working location")
 aoi_location = os.path.join(root_dir, os.getenv("AOI_GDB"))
 csv_dir = os.path.join(root_dir,'deliverables','report') #Need to write in if not os.path exists create folder or change to our folder structure
 if not os.path.exists(csv_dir):
@@ -69,14 +75,15 @@ for layer_name in layer_name_list:
 
 
 def layers():
+    arcpy.env.workspace = workspace
     disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file,bcgw_inst)
     buffer_disturbance()
     intersect(unique_value, aoi_location, layer_name, dissolve_values)
     delete()
-    interim_clean_up(dissolve_values)
+    interim_clean_up(dissolve_values,layer_name)
 def spagh_meatball():
 
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
     search_word = "{}".format(unique_value)
 
     with arcpy.da.SearchCursor(aoi, [search_word]) as cursor:
@@ -117,7 +124,7 @@ def table():
 def protection():
     protect_aoi(aoi_location, layer_name, unique_value)
     
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
     search_word = "{}".format(unique_value)
 
     with arcpy.da.SearchCursor(aoi, [search_word]) as cursor:
@@ -142,7 +149,7 @@ def protection():
         clean_and_join(value_update, keep_list)
         combine(values, value_update, unique_value, intersect_layer, aoi_location)
 def protection_table():
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
     search_word = "{}".format(unique_value)
 
     with arcpy.da.SearchCursor(aoi, [search_word]) as cursor:
@@ -192,7 +199,7 @@ for layer_name in layer_name_list:
 os.chdir(csv_dir)
 
 # Get area of each habitat type
-arcpy.env.workspace = aoi_location.replace('\\','/')[:-1]
+arcpy.env.workspace = aoi_location   #.replace('\\','/')[:-1]
 aoilist = arcpy.ListFeatureClasses()
 herd = []
 hab = []
