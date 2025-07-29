@@ -38,9 +38,9 @@ def protect_aoi(aoi_location, layer_name, unique_value):
     print("AOI loaded")
 # Function clips the designated lands (protection) layer by each AOI created in the protection function of Run_Disturbance
 def gather_protection(designated_lands, value_update):
-    arcpy.analysis.Clip(designated_lands, 'aoi', '{}_designated_lands_clip'.format(value_update))
+    arcpy.analysis.Clip(designated_lands, 'aoi', f"{value_update}_designated_lands_clip")
 
-    arcpy.management.Dissolve('{}_designated_lands_clip'.format(value_update), '{}_designated_lands'.format(value_update), ['designation', 'source_name', 'forest_restriction', 'mine_restriction', 'og_restriction'])
+    arcpy.management.Dissolve(f"{value_update}_designated_lands_clip", f"{value_update}_designated_lands", ['designation', 'source_name', 'forest_restriction', 'mine_restriction', 'og_restriction'])
 # Using the Spaghetti and Meatballs method (see disturbance) protection overlap relationship is created
 def flatten_protection(value_update):
     delete_layer = []

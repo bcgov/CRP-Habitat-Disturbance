@@ -50,7 +50,7 @@ def combine_loose_sheets(csv_dir,csv_output_name):
     for flat_files_df in flat_files:
         flatfiles_name = flat_files_df.strip('.csv')
 
-        flatfiles_name = pd.read_csv(csv_dir + flat_files_df)
+        flatfiles_name = pd.read_csv(os.path.join(csv_dir,flat_files_df))
 
         df_flat_files.append(flatfiles_name)
 
@@ -62,11 +62,11 @@ def combine_loose_sheets(csv_dir,csv_output_name):
     ##
 
     # Export the concat files together to a single flat 
-    disturb_flat.to_csv(csv_dir + "{}.csv".format(csv_output_name))
+    disturb_flat.to_csv(os.path.join(csv_dir ,f"{csv_output_name}.csv"))
 
 def make_sheet_base(intersect_layer, unique_value, aoi_location, csv_dir):
     
-    layer = aoi_location + intersect_layer
+    layer = os.path.join(aoi_location, intersect_layer)
 
     with arcpy.da.SearchCursor(layer, [unique_value]) as cursor:
         ecotypes = sorted({row[0] for row in cursor})
@@ -76,11 +76,12 @@ def make_sheet_base(intersect_layer, unique_value, aoi_location, csv_dir):
 
 def static_grouping(csv_dir, csv_output_name, table_group, final_output):
     
-    flat_table = pd.read_csv(csv_dir + csv_output_name + '.csv')
+    flat_table = pd.read_csv(os.path.join(csv_dir,f"{csv_output_name}.csv"))
     data_top = flat_table .head()
     print(data_top)
+    print(flat_table.columns)
 
-    sheet_base = pd.read_csv(csv_dir + 'sheet_base.csv')
+    sheet_base = pd.read_csv(os.path.join(csv_dir ,'sheet_base.csv'))
     sheet_base = sheet_base.drop(columns=['Shape_Length', 'Shape_Area'])
 
     ### Set up the first one to join to the herd table
@@ -305,4 +306,4 @@ def static_grouping(csv_dir, csv_output_name, table_group, final_output):
 
     print(static_table.head())
 
-    static_table.to_csv(csv_dir + final_output + ".csv")
+    static_table.to_csv(os.path.join(csv_dir, f"{final_output}.csv"))

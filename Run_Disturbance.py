@@ -5,7 +5,8 @@ import numpy as np
 from dotenv import load_dotenv
 ## If you get a warning about pandas not exisitng/installed write this line of code in the termianl and run it
 ## python -m pip install "pandasql"
-
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 from arcpy import env
 from Data_prep import prepare_data
@@ -19,8 +20,7 @@ from disturbance_protection_combine import combine_disturbance_and_protection, c
 arcpy.env.parallelProcessingFactor = "50%"
 arcpy.env.overwriteOutput = True
 
-####config###
-load_dotenv()
+
 #paths
 root_dir=os.getenv("ROOT_DIR")
 out_gdb=os.getenv("OUTPUT_GDB")
@@ -75,6 +75,7 @@ for layer_name in layer_name_list:
 
 
 def layers():
+    print('************ layers ************')
     arcpy.env.workspace = workspace
     disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file,bcgw_inst)
     buffer_disturbance()
@@ -187,9 +188,9 @@ for layer_name in layer_name_list:
     final_output = final_output_list[iterate]
     csv_protect_output = csv_protect_output_list[iterate]
 
-    layers()
-    spagh_meatball()
-    table()
+    # layers()
+    # spagh_meatball()
+    # table()
     protection()
     protection_table()
 
