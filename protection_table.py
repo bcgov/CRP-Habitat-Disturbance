@@ -48,7 +48,7 @@ def combine_loose_herds(csv_dir, value_update,csv_protect_output):
         print(flat_files_df)
         flatfiles_name = flat_files_df.strip('.csv')
 
-        flatfiles_name = pd.read_csv(csv_dir + flat_files_df)
+        flatfiles_name = pd.read_csv(os.path.join(csv_dir, flat_files_df))
 
         df_flat_files.append(flatfiles_name)
     
@@ -58,12 +58,12 @@ def combine_loose_herds(csv_dir, value_update,csv_protect_output):
     print(protect_flat)
     ##
 
-    protect_flat.to_csv(csv_dir + csv_protect_output + ".csv")
+    protect_flat.to_csv(os.path.join(csv_dir,f"{csv_protect_output}.csv"))
     
 def protection_grouping(csv_dir, csv_protect_output, table_group):
-    flat = pd.read_csv(csv_dir + csv_protect_output + ".csv")
+    flat = pd.read_csv(os.path.join(csv_dir,f"{csv_protect_output}.csv"))
 
-    herd_base = pd.read_csv(csv_dir + 'sheet_base.csv')
+    herd_base = pd.read_csv(os.path.join(csv_dir,'sheet_base.csv'))
     herd_base = herd_base.drop(columns=['Shape_Length', 'Shape_Area'])
 
     park_national = flat.loc[flat.designations.str.contains("park_national", na=False)]
@@ -100,9 +100,9 @@ def protection_grouping(csv_dir, csv_protect_output, table_group):
     
 def protection_classes(csv_dir, csv_protect_output, table_group):
 
-    flat = pd.read_csv(csv_dir + csv_protect_output + ".csv")
+    flat = pd.read_csv(os.path.join(csv_dir,f"{csv_protect_output}.csv"))
 
-    herd_base = pd.read_csv(csv_dir + 'sheet_base.csv')
+    herd_base = pd.read_csv(os.path.join(csv_dir,'sheet_base.csv'))
     herd_base = herd_base.drop(columns=['Shape_Length', 'Shape_Area'])
 
 
@@ -171,6 +171,6 @@ def protection_classes(csv_dir, csv_protect_output, table_group):
                                                                    'Oil & Gas - Low']].sum())
 
     range_out = csv_protect_output.replace('protect','')
-    flat_protections.to_csv(csv_dir + range_out + "flat_groupings.csv")
+    flat_protections.to_csv(os.path.join(csv_dir,f"{range_out}flat_groupings.csv"))
 
     print(flat_protections)

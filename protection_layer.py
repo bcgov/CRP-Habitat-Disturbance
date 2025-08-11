@@ -367,7 +367,7 @@ def clean_and_join(value_update, keep_list):
     
 def combine(values, value_update, unique_value, intersect_layer, aoi_location):
 
-    layer_location = (aoi_location + intersect_layer)
+    layer_location =os.path.join(aoi_location,intersect_layer)
     values_query = """{} = '{}'""".format(unique_value, values)
     values_select = arcpy.SelectLayerByAttribute_management(layer_location, "NEW_SELECTION", values_query)
     arcpy.CopyFeatures_management(values_select, 'aoi')

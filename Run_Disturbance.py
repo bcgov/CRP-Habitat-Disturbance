@@ -188,9 +188,9 @@ for layer_name in layer_name_list:
     final_output = final_output_list[iterate]
     csv_protect_output = csv_protect_output_list[iterate]
 
-    # layers()
-    # spagh_meatball()
-    # table()
+    layers()
+    spagh_meatball()
+    table()
     protection()
     protection_table()
 
@@ -368,7 +368,7 @@ disturb_percent_all_df_SMC_Central.to_excel(writer, sheet_name = "SMC - Central 
 disturb_all_df_SMC_South.to_excel(writer, sheet_name = "SMC - South (ha)", header = False)
 disturb_percent_all_df_SMC_South.to_excel(writer, sheet_name = "SMC - South (%)", header = False)
 
-writer.save()
+writer.close()
 
 del(writer)
 
@@ -380,12 +380,32 @@ prot_all_df = pd.DataFrame()
 prot_percent_all_df = pd.DataFrame()
 for final_output in csv_protect_output_list:
     rangename = final_output.replace('_protect', '')
-    prot_df1 = pd.read_csv(rangename + "_protections_flat.csv")
+    prot_df1 = pd.read_csv(f"{rangename}_protect_flat.csv") # changed from f"{rangename}_protections_flat.csv"
 
-    # Add range area in hectares
+    # # Add range area in hectares
+    # ha_val = list(area_df[area_df["Herd"] == rangename]["Hectare"])
+    # insert_index = prot_df1.columns.get_loc("Herd_Name") + 1
+    # prot_df1.insert(insert_index,'Area (ha)',ha_val)
+    # Modify the ha_val assignment to handle length mismatch
     ha_val = list(area_df[area_df["Herd"] == rangename]["Hectare"])
+
+    # Check if we have a length mismatch
+    if len(ha_val) == 1 and len(prot_df1) > 1:
+        # Broadcast the single value to match DataFrame length
+        ha_val = [ha_val[0]] * len(prot_df1)
+    elif len(ha_val) == 0:
+        # Handle case where no matching herd is found
+        print(f"Warning: No area found for herd {rangename}")
+        ha_val = [0] * len(prot_df1)
+    elif len(ha_val) != len(prot_df1):
+        # Handle any other length mismatch
+        print(f"Warning: Area values length ({len(ha_val)}) doesn't match DataFrame length ({len(prot_df1)})")
+        # Use first value or pad with zeros
+        ha_val = [ha_val[0] if ha_val else 0] * len(prot_df1)
+
+    # Now insert with matching lengths
     insert_index = prot_df1.columns.get_loc("Herd_Name") + 1
-    prot_df1.insert(insert_index,'Area (ha)',ha_val)
+    prot_df1.insert(insert_index, 'Area (ha)', ha_val)
     
     prot_df1 = prot_df1.transpose()
     
@@ -431,12 +451,19 @@ for final_output in csv_protect_output_list:
     # Make copy of dataframe so changes don't affect original
     prot_percent = prot_df.copy()
     
-    for x in list(range(0, len(prot_percent.columns))):
-        total_area = prot_percent.loc["Area (ha)",x]
-        # Find non-null values in data value rows, round to 2 decimal place, change to text and put % at end
-        prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()] = \
-            (prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()]\
-             / total_area * 100).astype(float).round(2).astype(str) + '%'
+    # for x in list(range(0, len(prot_percent.columns))):
+    #     total_area = prot_percent.loc["Area (ha)",x]
+    #     # Find non-null values in data value rows, round to 2 decimal place, change to text and put % at end
+    #     prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()] = \
+    #         (prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()]\
+    #          / total_area * 100).astype(float).round(2).astype(str) + '%'
+    for col in prot_percent.columns:
+        if col != 'Protection':  # Skip non-numeric columns
+            prot_percent[col] = pd.to_numeric(prot_percent[col], errors='coerce')
+
+    # Then at line 458, the division operation should work:
+    (prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()]\
+    / prot_percent.iloc[0,x]) * 100
 
     # Append to total table
     prot_percent_all_df = pd.concat([prot_percent_all_df, prot_percent], axis = 1) 
@@ -517,6 +544,6 @@ prot_percent_all_df_SMC_Central.to_excel(writer, sheet_name = "SMC - Central (%)
 prot_all_df_SMC_South.to_excel(writer, sheet_name = "SMC - South (ha)", header = False)
 prot_percent_all_df_SMC_South.to_excel(writer, sheet_name = "SMC - South (%)", header = False)
 
-writer.save()
+writer.close()
 
 del(writer)
