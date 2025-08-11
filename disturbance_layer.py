@@ -26,17 +26,36 @@ import logging
 import smtplib
 import socket
 import pandas as pd
+import dotenv
 
+root_dir=os.getenv("ROOT_DIR")
+workspace= os.path.join(root_dir, os.getenv("OUTPUT_GDB"))
 arcpy.env.overwriteOutput = True
-def disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file):
-
-    arcpy.CreateDatabaseConnection_management(connPath, connFile, "ORACLE", "bcgw.bcgov/idwprod1.bcgov", "", username, password)
+arcpy.env.workspace = workspace
+def disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file,inst):
+    if arcpy.Exists(f"{layer_name}_disturbance"):
+        print('disturbance aoi finished moving on to next step')
+        return
     bcgwConn = os.path.join(connPath, connFile)
-    print("Connected to the BCGW")
+    try:
+                arcpy.CreateDatabaseConnection_management(out_folder_path=connPath,
+                                                        out_name=connFile,
+                                                        database_platform='ORACLE',
+                                                        instance=inst,
+                                                        account_authentication='DATABASE_AUTH',
+                                                        username=username,
+                                                        password=password,
+                                                        save_user_pass='DO_NOT_SAVE_USERNAME')
+                print(' new SDE connection')
+    except:
+        print('Database connection already exists')
 
-    aoi = (aoi_location + layer_name)
+    aoi = (os.path.join(aoi_location,layer_name))
 
-    search_word = "{}".format(unique_value)
+    search_word = str(unique_value)
+
+    print(aoi)
+    print(search_word)
 
     with arcpy.da.SearchCursor(aoi, [search_word]) as cursor:
         values_sorted = sorted({row[0] for row in cursor})
@@ -96,7 +115,8 @@ def disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_
                 if name.startswith('cut'):
                     arcpy.CalculateField_management('{}_{}'.format(name, value_update), "type", '''"Temporal"''', "PYTHON")
                     
-                    cut_select = "!HARVEST_YEAR!"
+                    # cut_select = "!HARVEST_YEAR!"
+                    cut_select = "!HARVEST_START_YEAR_CALENDAR!"
                     arcpy.CalculateField_management('{}_{}'.format(name, value_update), "year", cut_select)
                     print('done cutblock')
 
@@ -282,6 +302,10 @@ def buffer_disturbance():
     buffer_features = arcpy.ListFeatureClasses()
 
     for buffer_f in buffer_features:
+        if arcpy.Exists(f"{buffer_f}_buffer"):
+            print(f"{buffer_f}_buffer already buffered")
+            return
+        
         if buffer_f.endswith('_disturbance'):
             print(buffer_f)
             # Select all disturbance except fire, pest and reservoir - they don't recieve the 500m buffer 
@@ -305,12 +329,16 @@ def intersect(unique_value, aoi_location, layer_name, dissolve_values):
     intersect_layers = []
     # Picks features that end with _buffer or _disturbance
     for intersect_f in intersect_features:
+        if arcpy.Exists(f"{intersect_f}_intersect"):
+            print(f"{intersect_f}_intersect already exists")
+            continue
+        
         if intersect_f.endswith(intersect_str):
             intersect_layers.append(intersect_f)
         else:
             pass
         # If the features starts with the values name that is currently being used
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
 
     search_word = "{}".format(unique_value)
 
@@ -360,7 +388,11 @@ def delete():
     for delete in delete_list:
         arcpy.Delete_management(delete)
 # cleans up fields from layer
-def interim_clean_up(dissolve_values):
+def interim_clean_up(dissolve_values, lyr):
+    print('******************** interim clean up ********************')
+    if arcpy.Exists(f"{lyr}_disturbance_final"):
+        print(f"{lyr}_disturbance_final already exists")
+        return
     intersect_features = arcpy.ListFeatureClasses()
     intersect_str = ("_intersect")
     print("working??")
@@ -708,7 +740,11 @@ def disturbance_cleanup(values, value_update, keep_list):
     print(fieldNameList)
 
     for keep_field in keep_list:
-        fieldNameList.remove(keep_field)
+        print(keep_field)
+        try:
+            fieldNameList.remove(keep_field)
+        except:
+             print(f"{keep_field} not in fieldNameList, skipping removal")
     fieldNameList.remove('Join_Count')
     fieldNameList.remove('disturbances')
     fieldNameList.remove('types')
@@ -946,7 +982,10 @@ def disturbance_buffer_cleanup(values, value_update, keep_list):
 
     print(fieldNameList)
     for keep_field in keep_list:
-            fieldNameList.remove(keep_field)
+            try:
+                fieldNameList.remove(keep_field)
+            except:
+                print(f"{keep_field} not in fieldNameList, skipping removal")
     fieldNameList.remove('Join_Count')
     fieldNameList.remove('disturbances_buffer')
     fieldNameList.remove('types_buffer')
@@ -984,8 +1023,9 @@ def identity(csv_dir, values, value_update, unique_value, intersect_layer, aoi_l
     print(values)
     print(value_update)
 
-    layer_location = (aoi_location + intersect_layer)
+    layer_location = os.path.join(aoi_location,intersect_layer)
     values_query = """{} = '{}'""".format(unique_value, values)
+
     values_select = arcpy.SelectLayerByAttribute_management(layer_location, "NEW_SELECTION", values_query)
     arcpy.CopyFeatures_management(values_select, 'aoi')
     

@@ -1,49 +1,90 @@
 import arcpy
 import os
-import re
-import json
-import logging
-import smtplib
-import socket
 import pandas as pd
 import numpy as np
-import pandasql
-import getpass
+from dotenv import load_dotenv
 ## If you get a warning about pandas not exisitng/installed write this line of code in the termianl and run it
 ## python -m pip install "pandasql"
-
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 from arcpy import env
+from Data_prep import prepare_data
 from disturbance_layer import disturbance_aoi, buffer_disturbance, intersect, delete, interim_clean_up, delete_layers, disturbance_flatten, disturbance_field_mapping, disturbance_cleanup, disturbance_buffer_flatten,disturbance_buffer_field_mapping, disturbance_buffer_cleanup, identity
 from table_create import combine_loose_sheets, make_sheet_base, static_grouping
 from protection_layer import protect_aoi, gather_protection, flatten_protection, field_mapping, clean_and_join, combine
 from protection_table import tabletotable, combine_loose_herds, protection_grouping, protection_classes
 from disturbance_protection_combine import combine_disturbance_and_protection, clean_up
-configFile = r"config_disturbance_2023.json"
+
 
 arcpy.env.parallelProcessingFactor = "50%"
 arcpy.env.overwriteOutput = True
 
-def readConfig(configFile):#returns dictionary of parameters
-    """
-    reads the config file to dictionary
-    """
-    with open(configFile) as json_file:
-        try:
-            d = json.load(json_file)
-        except:
-            print ("failed to parse configuration")
-        else:
-            return d['params']
+
+#paths
+root_dir=os.getenv("ROOT_DIR")
+out_gdb=os.getenv("OUTPUT_GDB")
+workspace= os.path.join(root_dir, out_gdb)
+if not os.path.exists(workspace):
+    print("Creating output GDB in working location")
+    arcpy.management.CreateFileGDB(out_folder_path=root_dir, out_name=out_gdb)
+else:
+    print("Using existing output GDB in working location")
+aoi_location = os.path.join(root_dir, os.getenv("AOI_GDB"))
+csv_dir = os.path.join(root_dir,'deliverables','report') #Need to write in if not os.path exists create folder or change to our folder structure
+if not os.path.exists(csv_dir):
+    os.makedirs(csv_dir)
+
+
+#bcgw connection
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
+bcgw_inst=os.getenv("BCGW_INST")
+connPath = r'T:\\'
+connFile = "BCGW.sde"
+
+#values
+layer_name_list = os.getenv("LAYER_NAME").split(",")
+unique_value = os.getenv("UNIQUE_VALUE")
+dissolve_values = os.getenv("DISSOLVE_VALUES").split(",")
+keep_list =  os.getenv("KEEP_LIST").split(",")
+intersect_layer_list = os.getenv("INTERSECT_LAYER").split(",")
+table_group= os.getenv("TABLE_GROUP").split(",")
+
+#layers
+designated_lands= os.getenv("DESIGNATED_LANDS") #write in os path exists to verify this is correct
+roads_file = os.getenv("ROADS_FILE") #write in os path exists to verify this is correct
+bcce_file = os.getenv("BCCE_FILE") #write in os path exists to verify this is correct
+linework=os.getenv("LINE_WORK") #write in os path exists to verify this is correct
+range_bounds=os.getenv("RANGE_BOUNDS")
+
+# Generate dynamic output names based on layer names
+csv_output_name_list = []
+final_output_list = []
+csv_protect_output_list = []
+
+for layer_name in layer_name_list:
+    # Clean layer name for file naming (same logic used in spagh_meatball function)
+    clean_name = layer_name.replace(" ", "").replace("-", "").replace(":", "").replace("/", "")
+    
+    # Generate output names based on pattern from comments
+    csv_output_name_list.append(f"{clean_name}_1005")  # or use appropriate suffix
+    final_output_list.append(f"{clean_name}_final")
+    csv_protect_output_list.append(f"{clean_name}_protect")
+###end config ####
+
+
 def layers():
-    disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file)
+    print('************ layers ************')
+    arcpy.env.workspace = workspace
+    disturbance_aoi(connPath, connFile, username, password, aoi_location, layer_name, unique_value, roads_file, bcce_file,bcgw_inst)
     buffer_disturbance()
     intersect(unique_value, aoi_location, layer_name, dissolve_values)
     delete()
-    interim_clean_up(dissolve_values)
+    interim_clean_up(dissolve_values,layer_name)
 def spagh_meatball():
 
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
     search_word = "{}".format(unique_value)
 
     with arcpy.da.SearchCursor(aoi, [search_word]) as cursor:
@@ -84,7 +125,7 @@ def table():
 def protection():
     protect_aoi(aoi_location, layer_name, unique_value)
     
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
     search_word = "{}".format(unique_value)
 
     with arcpy.da.SearchCursor(aoi, [search_word]) as cursor:
@@ -109,7 +150,7 @@ def protection():
         clean_and_join(value_update, keep_list)
         combine(values, value_update, unique_value, intersect_layer, aoi_location)
 def protection_table():
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
     search_word = "{}".format(unique_value)
 
     with arcpy.da.SearchCursor(aoi, [search_word]) as cursor:
@@ -129,34 +170,16 @@ def protection_table():
         make_sheet_base(intersect_layer, unique_value, aoi_location, csv_dir)
         protection_grouping(csv_dir, csv_protect_output, table_group)
         protection_classes(csv_dir, csv_protect_output, table_group)
-########
-readConfig(configFile)
-cfg = readConfig(configFile)
-#####################################
-# Modified for lists (running over multiple ranges at once)
-workspace = cfg[0]['workspace']
-connPath = cfg[0]['connPath']
-connFile = cfg[0]['connFile']
-username = "BOYANLIU"
-password = getpass.getpass()
-aoi_location = cfg[0]["aoi_location"]
-layer_name_list = cfg[0]["layer_name"]
-unique_value = cfg[0]["unique_value"]
-dissolve_values = cfg[0]["dissolve_values"]
-keep_list = cfg[0]["keep_list"]
-csv_dir = cfg[0]["csv_dir"]
-intersect_layer_list = cfg[0]["intersect_layer"]
-csv_output_name_list = cfg[0]["csv_output_name"]
-table_group = cfg[0]["table_group"]
-final_output_list = cfg[0]["final_output"]
-csv_protect_output_list = cfg[0]["csv_protect_output"]
-designated_lands = cfg[0]["designated_lands"]
-roads_file = cfg[0]["roads_file"]
-bcce_file = cfg[0]["bcce_file"]
+
+
+prepare_data(root_dir, linework, range_bounds, designated_lands, connPath, username, password, bcgw_inst )
+
 ######################################
 arcpy.env.workspace = workspace
 arcpy.env.overwriteOutput = True
 ######################################
+
+
 iterate = 0
 for layer_name in layer_name_list:
 
@@ -177,7 +200,7 @@ for layer_name in layer_name_list:
 os.chdir(csv_dir)
 
 # Get area of each habitat type
-arcpy.env.workspace = aoi_location.replace('\\','/')[:-1]
+arcpy.env.workspace = aoi_location   #.replace('\\','/')[:-1]
 aoilist = arcpy.ListFeatureClasses()
 herd = []
 hab = []
@@ -345,7 +368,7 @@ disturb_percent_all_df_SMC_Central.to_excel(writer, sheet_name = "SMC - Central 
 disturb_all_df_SMC_South.to_excel(writer, sheet_name = "SMC - South (ha)", header = False)
 disturb_percent_all_df_SMC_South.to_excel(writer, sheet_name = "SMC - South (%)", header = False)
 
-writer.save()
+writer.close()
 
 del(writer)
 
@@ -357,12 +380,32 @@ prot_all_df = pd.DataFrame()
 prot_percent_all_df = pd.DataFrame()
 for final_output in csv_protect_output_list:
     rangename = final_output.replace('_protect', '')
-    prot_df1 = pd.read_csv(rangename + "_protections_flat.csv")
+    prot_df1 = pd.read_csv(f"{rangename}_protect_flat.csv") # changed from f"{rangename}_protections_flat.csv"
 
-    # Add range area in hectares
+    # # Add range area in hectares
+    # ha_val = list(area_df[area_df["Herd"] == rangename]["Hectare"])
+    # insert_index = prot_df1.columns.get_loc("Herd_Name") + 1
+    # prot_df1.insert(insert_index,'Area (ha)',ha_val)
+    # Modify the ha_val assignment to handle length mismatch
     ha_val = list(area_df[area_df["Herd"] == rangename]["Hectare"])
+
+    # Check if we have a length mismatch
+    if len(ha_val) == 1 and len(prot_df1) > 1:
+        # Broadcast the single value to match DataFrame length
+        ha_val = [ha_val[0]] * len(prot_df1)
+    elif len(ha_val) == 0:
+        # Handle case where no matching herd is found
+        print(f"Warning: No area found for herd {rangename}")
+        ha_val = [0] * len(prot_df1)
+    elif len(ha_val) != len(prot_df1):
+        # Handle any other length mismatch
+        print(f"Warning: Area values length ({len(ha_val)}) doesn't match DataFrame length ({len(prot_df1)})")
+        # Use first value or pad with zeros
+        ha_val = [ha_val[0] if ha_val else 0] * len(prot_df1)
+
+    # Now insert with matching lengths
     insert_index = prot_df1.columns.get_loc("Herd_Name") + 1
-    prot_df1.insert(insert_index,'Area (ha)',ha_val)
+    prot_df1.insert(insert_index, 'Area (ha)', ha_val)
     
     prot_df1 = prot_df1.transpose()
     
@@ -408,12 +451,19 @@ for final_output in csv_protect_output_list:
     # Make copy of dataframe so changes don't affect original
     prot_percent = prot_df.copy()
     
-    for x in list(range(0, len(prot_percent.columns))):
-        total_area = prot_percent.loc["Area (ha)",x]
-        # Find non-null values in data value rows, round to 2 decimal place, change to text and put % at end
-        prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()] = \
-            (prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()]\
-             / total_area * 100).astype(float).round(2).astype(str) + '%'
+    # for x in list(range(0, len(prot_percent.columns))):
+    #     total_area = prot_percent.loc["Area (ha)",x]
+    #     # Find non-null values in data value rows, round to 2 decimal place, change to text and put % at end
+    #     prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()] = \
+    #         (prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()]\
+    #          / total_area * 100).astype(float).round(2).astype(str) + '%'
+    for col in prot_percent.columns:
+        if col != 'Protection':  # Skip non-numeric columns
+            prot_percent[col] = pd.to_numeric(prot_percent[col], errors='coerce')
+
+    # Then at line 458, the division operation should work:
+    (prot_percent.iloc[3:,x][prot_percent.iloc[3:,x].notnull()]\
+    / prot_percent.iloc[0,x]) * 100
 
     # Append to total table
     prot_percent_all_df = pd.concat([prot_percent_all_df, prot_percent], axis = 1) 
@@ -494,6 +544,6 @@ prot_percent_all_df_SMC_Central.to_excel(writer, sheet_name = "SMC - Central (%)
 prot_all_df_SMC_South.to_excel(writer, sheet_name = "SMC - South (ha)", header = False)
 prot_percent_all_df_SMC_South.to_excel(writer, sheet_name = "SMC - South (%)", header = False)
 
-writer.save()
+writer.close()
 
 del(writer)

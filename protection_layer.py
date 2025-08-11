@@ -27,7 +27,7 @@ import socket
 import pandas as pd
 # Function goes through area of interest (AOI) to start the intersection of protection layers
 def protect_aoi(aoi_location, layer_name, unique_value):
-    aoi = (aoi_location + layer_name)
+    aoi = os.path.join(aoi_location,layer_name)
 
     search_word = "{}".format(unique_value)
 
@@ -38,9 +38,9 @@ def protect_aoi(aoi_location, layer_name, unique_value):
     print("AOI loaded")
 # Function clips the designated lands (protection) layer by each AOI created in the protection function of Run_Disturbance
 def gather_protection(designated_lands, value_update):
-    arcpy.analysis.Clip(designated_lands, 'aoi', '{}_designated_lands_clip'.format(value_update))
+    arcpy.analysis.Clip(designated_lands, 'aoi', f"{value_update}_designated_lands_clip")
 
-    arcpy.management.Dissolve('{}_designated_lands_clip'.format(value_update), '{}_designated_lands'.format(value_update), ['designation', 'source_name', 'forest_restriction', 'mine_restriction', 'og_restriction'])
+    arcpy.management.Dissolve(f"{value_update}_designated_lands_clip", f"{value_update}_designated_lands", ['designation', 'source_name', 'forest_restriction', 'mine_restriction', 'og_restriction'])
 # Using the Spaghetti and Meatballs method (see disturbance) protection overlap relationship is created
 def flatten_protection(value_update):
     delete_layer = []
@@ -367,7 +367,7 @@ def clean_and_join(value_update, keep_list):
     
 def combine(values, value_update, unique_value, intersect_layer, aoi_location):
 
-    layer_location = (aoi_location + intersect_layer)
+    layer_location =os.path.join(aoi_location,intersect_layer)
     values_query = """{} = '{}'""".format(unique_value, values)
     values_select = arcpy.SelectLayerByAttribute_management(layer_location, "NEW_SELECTION", values_query)
     arcpy.CopyFeatures_management(values_select, 'aoi')
