@@ -101,7 +101,7 @@ class CaribouDisturbanceAnalysis:
     
     def get_herd_names(self, ecotype):
         """Get herd names for specific ecotype"""
-        herd_bounds_gdb = "W:/wlap/kam/Workarea/BErnst/Caribou/HERD_BOUND_2025_RENAME.gdb"
+        herd_bounds_gdb = "/Caribou/HERD_BOUND_2025_RENAME.gdb"
         
         # Read herd boundaries
         herds_df = []
@@ -423,7 +423,7 @@ class CaribouDisturbanceAnalysis:
         print("=== Starting Caribou Protection and Dominant Disturbance Analysis ===")
         
         # Define paths
-        output_folder = "S:/wlap/kam/Local/Workarea/BErnst_Archives/Caribou/Protection_Disturbance_2023_Update_2025"
+        output_folder = "/Protection_Disturbance_2023_Update_2025"
         
         # Ensure output folder exists
         if not os.path.exists(output_folder):
@@ -433,15 +433,15 @@ class CaribouDisturbanceAnalysis:
         ecotype_configs = [
             {
                 "name": "BOREAL",
-                "source_gdb": "S:/srm/smt/Workarea/JRemond/23_Disturbance_Analysis/Boreal_DisturbanceProtection.gdb"
+                "source_gdb": "/Boreal_DisturbanceProtection.gdb"
             },
             {
                 "name": "NMC", 
-                "source_gdb": "S:/srm/smt/Workarea/JRemond/23_Disturbance_Analysis/NMC_DisturbanceProtection.gdb"
+                "source_gdb": "NMC_DisturbanceProtection.gdb"
             },
             {
                 "name": "SMC_NG",
-                "source_gdb": "S:/srm/smt/Workarea/JRemond/23_Disturbance_Analysis/SMC_NG_DisturbanceProtection.gdb"
+                "source_gdb": "SMC_NG_DisturbanceProtection.gdb"
             }
         ]
         
