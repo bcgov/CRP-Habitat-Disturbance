@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
+from datetime import datetime
 ## If you get a warning about pandas not exisitng/installed write this line of code in the termianl and run it
 ## python -m pip install "pandasql"
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -225,7 +226,8 @@ area_df = pd.DataFrame({"Herd": herd_update, "Habitat": hab, "Hectare": ha})
 
 ########################################## Disturbance ##########################################
 # Write to multiple sheets in the same excel file
-writer = pd.ExcelWriter('Disturbance Analysis 2022.xlsx')
+yr=datetime.now().year
+writer = pd.ExcelWriter(f"Disturbance Analysis {yr}.xlsx")
 
 disturb_all_df = pd.DataFrame()
 disturb_percent_all_df = pd.DataFrame()
@@ -374,7 +376,7 @@ del(writer)
 
 ########################################## Protection ##########################################
 # Write to multiple sheets in the same excel file
-writer = pd.ExcelWriter('Protection Analysis 2022.xlsx')
+writer = pd.ExcelWriter(f"Protection Analysis {yr}.xlsx")
     
 prot_all_df = pd.DataFrame()
 prot_percent_all_df = pd.DataFrame()
