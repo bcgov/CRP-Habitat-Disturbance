@@ -24,7 +24,7 @@ import logging
 import smtplib
 import socket
 import pandas as pd
-import pandasql
+# import pandasql
 ## python -m pip install "pandasql"
 
 def combine_loose_sheets(csv_dir,csv_output_name):
@@ -254,32 +254,149 @@ def static_grouping(csv_dir, csv_output_name, table_group, final_output):
 
         static_table = pd.merge(static_table, fire_df_layer,  how="outer", left_on = table_group, right_on = table_group)
 
-    # Remove duplicate fields
-    flat_table = flat_table.drop(columns=['Area_Ha', 'area_ha_1', 'area_ha_12'])
+    # # Remove duplicate fields
+    # flat_table = flat_table.drop(columns=['Area_Ha', 'area_ha_1', 'area_ha_12'])
     
-    ## cumulative selection - no pest - no buffer
-    cumulative_np_81_21 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR latest_fire > 1981 OR latest_cut > 1981")
-    cumulative_np_81_11 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2011) OR (latest_cut > 1981 AND latest_cut < 2011)")
-    cumulative_np_81_01 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2001) OR (latest_cut > 1981 AND latest_cut < 2001)")
-    cumulative_np_81_91 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 1991) OR (latest_cut > 1981 AND latest_cut < 1991)")
+    # ## cumulative selection - no pest - no buffer
+    # cumulative_np_81_21 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR latest_fire > 1981 OR latest_cut > 1981")
+    # cumulative_np_81_11 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2011) OR (latest_cut > 1981 AND latest_cut < 2011)")
+    # cumulative_np_81_01 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2001) OR (latest_cut > 1981 AND latest_cut < 2001)")
+    # cumulative_np_81_91 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 1991) OR (latest_cut > 1981 AND latest_cut < 1991)")
 
-    # # # cumulative selection - no pest - buffer
-    cumulative_buffer_np_81_21 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR latest_fire > 1981 OR latest_cut_buffer > 1981")
-    cumulative_buffer_np_81_11 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2011) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 2011)")
-    cumulative_buffer_np_81_01 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2001) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 2001)")
-    cumulative_buffer_np_81_91 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 1991) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 1991)")
+    # # # # cumulative selection - no pest - buffer
+    # cumulative_buffer_np_81_21 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR latest_fire > 1981 OR latest_cut_buffer > 1981")
+    # cumulative_buffer_np_81_11 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2011) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 2011)")
+    # cumulative_buffer_np_81_01 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2001) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 2001)")
+    # cumulative_buffer_np_81_91 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 1991) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 1991)")
 
-    # # # cumulative selection - pest - no buffer
-    cumulative_p_81_21 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR latest_fire > 1981 OR latest_cut > 1981 OR latest_pest > 1981")
-    cumulative_p_81_11 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2011) OR (latest_cut > 1981 AND latest_cut < 2011) OR (latest_pest > 1981 AND latest_pest < 2011)")
-    cumulative_p_81_01 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2001) OR (latest_cut > 1981 AND latest_cut < 2001) OR (latest_pest > 1981 AND latest_pest < 2001)")
-    cumulative_p_81_91 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 1991) OR (latest_cut > 1981 AND latest_cut < 1991) OR (latest_pest > 1981 AND latest_pest < 1991)")
+    # # # # cumulative selection - pest - no buffer
+    # cumulative_p_81_21 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR latest_fire > 1981 OR latest_cut > 1981 OR latest_pest > 1981")
+    # cumulative_p_81_11 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2011) OR (latest_cut > 1981 AND latest_cut < 2011) OR (latest_pest > 1981 AND latest_pest < 2011)")
+    # cumulative_p_81_01 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2001) OR (latest_cut > 1981 AND latest_cut < 2001) OR (latest_pest > 1981 AND latest_pest < 2001)")
+    # cumulative_p_81_91 = pandasql.sqldf("SELECT * FROM flat_table WHERE types LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 1991) OR (latest_cut > 1981 AND latest_cut < 1991) OR (latest_pest > 1981 AND latest_pest < 1991)")
 
-    # # # cumulative selection - pest - buffer
-    cumulative_buffer_p_81_21 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR latest_fire > 1981 OR latest_cut_buffer > 1981 OR latest_pest > 1981")
-    cumulative_buffer_p_81_11 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2011) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 2011) OR (latest_pest > 1981 AND latest_pest < 2011)")
-    cumulative_buffer_p_81_01 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2001) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 2001) OR (latest_pest > 1981 AND latest_pest < 2001)")
-    cumulative_buffer_p_81_91 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 1991) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 1991) OR (latest_pest > 1981 AND latest_pest < 1991)")
+    # # # # cumulative selection - pest - buffer
+    # cumulative_buffer_p_81_21 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR latest_fire > 1981 OR latest_cut_buffer > 1981 OR latest_pest > 1981")
+    # cumulative_buffer_p_81_11 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2011) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 2011) OR (latest_pest > 1981 AND latest_pest < 2011)")
+    # cumulative_buffer_p_81_01 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 2001) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 2001) OR (latest_pest > 1981 AND latest_pest < 2001)")
+    # cumulative_buffer_p_81_91 = pandasql.sqldf("SELECT * FROM flat_table WHERE types_buffer LIKE '%Static%' OR (latest_fire > 1981 AND latest_fire < 1991) OR (latest_cut_buffer > 1981 AND latest_cut_buffer < 1991) OR (latest_pest > 1981 AND latest_pest < 1991)")
+
+    #replaced above pandasql code with the following code:
+    # Drop columns
+    flat_table = flat_table.drop(columns=['Area_Ha', 'area_ha_1', 'area_ha_12'])
+
+    # Helper function for "like" behavior
+    def contains_static(series):
+        return series.str.contains('Static', case=False, na=False)
+
+    # --- cumulative selection - no pest - no buffer ---
+    cumulative_np_81_21 = flat_table[
+        contains_static(flat_table['types']) |
+        (flat_table['latest_fire'] > 1981) |
+        (flat_table['latest_cut'] > 1981)
+    ]
+
+    cumulative_np_81_11 = flat_table[
+        contains_static(flat_table['types']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 2011)) |
+        ((flat_table['latest_cut'] > 1981) & (flat_table['latest_cut'] < 2011))
+    ]
+
+    cumulative_np_81_01 = flat_table[
+        contains_static(flat_table['types']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 2001)) |
+        ((flat_table['latest_cut'] > 1981) & (flat_table['latest_cut'] < 2001))
+    ]
+
+    cumulative_np_81_91 = flat_table[
+        contains_static(flat_table['types']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 1991)) |
+        ((flat_table['latest_cut'] > 1981) & (flat_table['latest_cut'] < 1991))
+    ]
+
+    # --- cumulative selection - no pest - buffer ---
+    cumulative_buffer_np_81_21 = flat_table[
+        contains_static(flat_table['types_buffer']) |
+        (flat_table['latest_fire'] > 1981) |
+        (flat_table['latest_cut_buffer'] > 1981)
+    ]
+
+    cumulative_buffer_np_81_11 = flat_table[
+        contains_static(flat_table['types_buffer']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 2011)) |
+        ((flat_table['latest_cut_buffer'] > 1981) & (flat_table['latest_cut_buffer'] < 2011))
+    ]
+
+    cumulative_buffer_np_81_01 = flat_table[
+        contains_static(flat_table['types_buffer']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 2001)) |
+        ((flat_table['latest_cut_buffer'] > 1981) & (flat_table['latest_cut_buffer'] < 2001))
+    ]
+
+    cumulative_buffer_np_81_91 = flat_table[
+        contains_static(flat_table['types_buffer']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 1991)) |
+        ((flat_table['latest_cut_buffer'] > 1981) & (flat_table['latest_cut_buffer'] < 1991))
+    ]
+
+    # --- cumulative selection - pest - no buffer ---
+    cumulative_p_81_21 = flat_table[
+        contains_static(flat_table['types']) |
+        (flat_table['latest_fire'] > 1981) |
+        (flat_table['latest_cut'] > 1981) |
+        (flat_table['latest_pest'] > 1981)
+    ]
+
+    cumulative_p_81_11 = flat_table[
+        contains_static(flat_table['types']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 2011)) |
+        ((flat_table['latest_cut'] > 1981) & (flat_table['latest_cut'] < 2011)) |
+        ((flat_table['latest_pest'] > 1981) & (flat_table['latest_pest'] < 2011))
+    ]
+
+    cumulative_p_81_01 = flat_table[
+        contains_static(flat_table['types']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 2001)) |
+        ((flat_table['latest_cut'] > 1981) & (flat_table['latest_cut'] < 2001)) |
+        ((flat_table['latest_pest'] > 1981) & (flat_table['latest_pest'] < 2001))
+    ]
+
+    cumulative_p_81_91 = flat_table[
+        contains_static(flat_table['types']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 1991)) |
+        ((flat_table['latest_cut'] > 1981) & (flat_table['latest_cut'] < 1991)) |
+        ((flat_table['latest_pest'] > 1981) & (flat_table['latest_pest'] < 1991))
+    ]
+
+    # --- cumulative selection - pest - buffer ---
+    cumulative_buffer_p_81_21 = flat_table[
+        contains_static(flat_table['types_buffer']) |
+        (flat_table['latest_fire'] > 1981) |
+        (flat_table['latest_cut_buffer'] > 1981) |
+        (flat_table['latest_pest'] > 1981)
+    ]
+
+    cumulative_buffer_p_81_11 = flat_table[
+        contains_static(flat_table['types_buffer']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 2011)) |
+        ((flat_table['latest_cut_buffer'] > 1981) & (flat_table['latest_cut_buffer'] < 2011)) |
+        ((flat_table['latest_pest'] > 1981) & (flat_table['latest_pest'] < 2011))
+    ]
+
+    cumulative_buffer_p_81_01 = flat_table[
+        contains_static(flat_table['types_buffer']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 2001)) |
+        ((flat_table['latest_cut_buffer'] > 1981) & (flat_table['latest_cut_buffer'] < 2001)) |
+        ((flat_table['latest_pest'] > 1981) & (flat_table['latest_pest'] < 2001))
+    ]
+
+    cumulative_buffer_p_81_91 = flat_table[
+        contains_static(flat_table['types_buffer']) |
+        ((flat_table['latest_fire'] > 1981) & (flat_table['latest_fire'] < 1991)) |
+        ((flat_table['latest_cut_buffer'] > 1981) & (flat_table['latest_cut_buffer'] < 1991)) |
+        ((flat_table['latest_pest'] > 1981) & (flat_table['latest_pest'] < 1991))
+    ]
+
 
     cumulative_selections = {"cumulative no pest no buffer 1981-2021":cumulative_np_81_21, "cumulative no pest no buffer 1981-2011":cumulative_np_81_11, 
                             "cumulative no pest no buffer 1981-2001":cumulative_np_81_01, "cumulative no pest no buffer 1981-1991":cumulative_np_81_91,

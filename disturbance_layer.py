@@ -763,20 +763,34 @@ def disturbance_cleanup(values, value_update, keep_list):
     
     arcpy.JoinField_management("{}_disturb_flat".format(value_update), 'OBJECTID', fc, 'ORIG_FID')
 
-    null_selection = ("disturbances IS NULL")
-    null = arcpy.SelectLayerByAttribute_management("{}_disturb_flat".format(value_update), "NEW_SELECTION", null_selection)
+    # null_selection = ("disturbances IS NULL")
+    # null = arcpy.SelectLayerByAttribute_management("{}_disturb_flat".format(value_update), "NEW_SELECTION", null_selection)
+    # arcpy.DeleteFeatures_management(null)
+
+    # arcpy.AlterField_management("{}_disturb_flat".format(value_update), 'Join_Count', 'Number_Disturbance', 'Number of Overlapping Disturbances')
+
+    # arcpy.AddField_management("{}_disturb_flat".format(value_update), "most_recent_pest", "TEXT", "", "", "", "Most Recent Pest Severity")
+    # arcpy.CalculateField_management("{}_disturb_flat".format(value_update), "most_recent_pest", '!pest_severity![-1]', "PYTHON3")
+
+    # arcpy.AddField_management("{}_disturb_flat".format(value_update), "area_ha", "DOUBLE", "", "", "", "Area Ha")
+    # arcpy.CalculateField_management("{}_disturb_flat".format(value_update), "area_ha", '!shape.area@HECTARES!', "PYTHON3")
+
+    # arcpy.AddField_management("{}_disturb_flat".format(value_update), "analysis_date", "DATE")
+    # arcpy.CalculateField_management("{}_disturb_flat".format(value_update), "analysis_date", 'datetime.datetime.now()', "PYTHON3")
+    null_selection = "disturbances IS NULL"
+    null = arcpy.SelectLayerByAttribute_management(f"{value_update}_disturb_flat", "NEW_SELECTION", null_selection)
     arcpy.DeleteFeatures_management(null)
 
-    arcpy.AlterField_management("{}_disturb_flat".format(value_update), 'Join_Count', 'Number_Disturbance', 'Number of Overlapping Disturbances')
+    arcpy.AlterField_management(f"{value_update}_disturb_flat", 'Join_Count', 'Number_Disturbance', 'Number of Overlapping Disturbances')
 
-    arcpy.AddField_management("{}_disturb_flat".format(value_update), "most_recent_pest", "TEXT", "", "", "", "Most Recent Pest Severity")
-    arcpy.CalculateField_management("{}_disturb_flat".format(value_update), "most_recent_pest", '!pest_severity![-1]', "PYTHON3")
+    arcpy.AddField_management(f"{value_update}_disturb_flat", "most_recent_pest", "TEXT", "", "", "", "Most Recent Pest Severity")
+    arcpy.CalculateField_management(f"{value_update}_disturb_flat", "most_recent_pest", '!pest_severity![-1]', "PYTHON3")
 
-    arcpy.AddField_management("{}_disturb_flat".format(value_update), "area_ha", "DOUBLE", "", "", "", "Area Ha")
-    arcpy.CalculateField_management("{}_disturb_flat".format(value_update), "area_ha", '!shape.area@HECTARES!', "PYTHON3")
+    arcpy.AddField_management(f"{value_update}_disturb_flat", "area_ha", "DOUBLE", "", "", "", "Area Ha")
+    arcpy.CalculateField_management(f"{value_update}_disturb_flat", "area_ha", '!shape.area@HECTARES!', "PYTHON3")
 
-    arcpy.AddField_management("{}_disturb_flat".format(value_update), "analysis_date", "DATE")
-    arcpy.CalculateField_management("{}_disturb_flat".format(value_update), "analysis_date", 'datetime.datetime.now()', "PYTHON3")
+    arcpy.AddField_management(f"{value_update}_disturb_flat", "analysis_date", "DATE")
+    arcpy.CalculateField_management(f"{value_update}_disturb_flat", "analysis_date", '''datetime.datetime.now()''', "PYTHON3")
 ################################################################################
 def disturbance_buffer_flatten(values,value_update):
     print(values)    

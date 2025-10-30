@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Caribou Protection and Dominant Disturbance Analysis - Python/ArcPy Version
-Converted from R script: PRO_DOM_DIST_2025_UPDATE_ALL_DU.R
+Converted from R script: PRO_DOM_DIST_2025_UPDATE_ALL_DU.R Written by Bevan Ernst, converted by CFOLKERS
 
 This script processes caribou habitat and disturbance data for different ecotypes:
 - Boreal
@@ -22,6 +22,16 @@ from pathlib import Path
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import warnings
+from datetime import datetime
+from dotenv import load_dotenv
+
+formatted_date = datetime.strftime("%Y-%m-%d")
+
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
+eco_type_value = os.getenv("ECO_TYPE")
+layer_name_list = os.getenv("LAYER_NAME").split(",")
 
 # Suppress warnings
 warnings.filterwarnings('ignore')
@@ -134,8 +144,17 @@ class CaribouDisturbanceAnalysis:
             for row in cursor:
                 pest_years = []
                 for i, year_val in enumerate(row[:-1]):  # Exclude latest_pest field
-                    if year_val is not None and year_val > 0:
-                        pest_years.append(year_val)
+                    if year_val is not None and year_val.strip():  # Check if text exists and isn't just whitespace
+                        # Split by semicolon and process each year
+                        years = [y.strip() for y in year_val.split(';')]
+                        # Convert to integers if needed
+                        try:
+                            numeric_years = [int(y) for y in years if y]
+                            if numeric_years:  # If any valid years
+                                pest_years.extend(numeric_years)
+                        except ValueError:
+                            # Handle case where conversion to int fails
+                            print(f"Warning: Could not convert value '{year_val}' to integers")
                 
                 if pest_years:
                     row[-1] = max(pest_years)  # latest_pest
@@ -207,7 +226,9 @@ class CaribouDisturbanceAnalysis:
                 disturbances_buffer = row_dict.get("disturbances_buffer", "") or ""
                 
                 dominant_disturbance = "Undefined"
-                
+                # print(f"Processing row: {row_dict}")
+                print(f"Latest Temporal: {latest_temporal}, Latest Type: {latest_temporal_type}")
+                print(f"Number Disturbance: {num_dist}, Number Disturbance Buffer: {num_dist_buff}")
                 if num_dist == 0 and num_dist_buff == 0:
                     dominant_disturbance = "Undisturbed"
                 elif num_dist > 0 and "road" in disturbances.lower():
@@ -224,13 +245,16 @@ class CaribouDisturbanceAnalysis:
                     dominant_disturbance = "Other Disturbance Buffer"
                 elif num_dist > 0 and latest_temporal is None:
                     dominant_disturbance = "Undisturbed"
+                print(f"Assigned Dominant Disturbance: {dominant_disturbance}")
                 
                 # Handle > 40 year disturbance
                 disturbance_year = latest_temporal if latest_temporal else (row_dict.get("latest_cut_buffer", 0) or 0)
-                if (disturbance_year < 1981 and disturbance_year > 0 and 
+                current_year = datetime.now().year
+                year_40= current_year - 40
+                if (disturbance_year < year_40 and disturbance_year > 0 and 
                     dominant_disturbance not in ["Road", "Static", "Undisturbed"]):
                     dominant_disturbance = "> 40 Year Disturbance"
-                
+                    print(f"Updated to > 40 Year Disturbance based on year: {disturbance_year}")
                 row_dict["Dominant_Disturbance"] = dominant_disturbance
                 row_dict["Dominant_Distubance_Year"] = disturbance_year if disturbance_year else 0
                 row_dict["FILL_COLOR"] = self.dominant_disturbance_colors.get(dominant_disturbance, "#FFFFFF")
@@ -357,7 +381,7 @@ class CaribouDisturbanceAnalysis:
         temp_gdb_name = f"{ecotype}_DOM_DIST_TEMP.gdb"
         temp_gdb_path = os.path.join(output_folder, temp_gdb_name)
         
-        dissolve_gdb_name = f"{ecotype}_PRO_DOM_DIST_DISS.gdb"
+        dissolve_gdb_name = f"{layer_name_list}_{ecotype}_PRO_DOM_DIST_DISS_{formatted_date}.gdb"
         dissolve_gdb_path = os.path.join(output_folder, dissolve_gdb_name)
         
         # Create dissolve geodatabase
@@ -426,12 +450,14 @@ class CaribouDisturbanceAnalysis:
         output_folder = "/Protection_Disturbance_2023_Update_2025"
         
         # Ensure output folder exists
-        if not os.path.exists(output_folder):
+        if os.path.exists(output_folder):
+            print(f"Output folder already exists: {output_folder}")
+        else:
             os.makedirs(output_folder)
         
         # Define ecotype configurations
-        ecotype_configs = [
-            {
+        if eco_type_value == "BOREAL":
+            ecotype_configs = {
                 "name": "BOREAL",
                 "source_gdb": "/Boreal_DisturbanceProtection.gdb"
             },
@@ -443,23 +469,31 @@ class CaribouDisturbanceAnalysis:
                 "name": "SMC_NG",
                 "source_gdb": "SMC_NG_DisturbanceProtection.gdb"
             }
-        ]
+        
         
         total_start = time.time()
         
+        print(f"Processing {len(ecotype_configs)} ecotype configurations...")
+        
         for config in ecotype_configs:
+            print(f"\nChecking configuration: {config['name']}")
+            print(f"Source GDB: {config['source_gdb']}")
+            
             try:
                 if arcpy.Exists(config["source_gdb"]):
+                    print(f"✓ Source geodatabase found: {config['source_gdb']}")
                     self.process_ecotype_data(
                         config["name"], 
                         config["source_gdb"], 
                         output_folder
                     )
                 else:
-                    print(f"Warning: Source geodatabase not found: {config['source_gdb']}")
+                    print(f"✗ Warning: Source geodatabase not found: {config['source_gdb']}")
                     
             except Exception as e:
-                print(f"Error processing {config['name']}: {str(e)}")
+                print(f"✗ Error processing {config['name']}: {str(e)}")
+                import traceback
+                traceback.print_exc()
                 continue
         
         total_end = time.time()
@@ -481,7 +515,6 @@ def main():
         print(f"Error in main analysis: {str(e)}")
         import traceback
         traceback.print_exc()
-
 
 if __name__ == "__main__":
     main()
