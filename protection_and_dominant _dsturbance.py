@@ -111,8 +111,7 @@ class CaribouDisturbanceAnalysis:
     
     def get_herd_names(self, ecotype):
         """Get herd names for specific ecotype"""
-        #change herd bounds path as needed
-        herd_bounds_gdb = "\\\\spatialfiles.bcgov\\Work\\srm\\gss\\initiatives\\caribou_recovery\\projects\\gr_2025_1033_habitat_status\\source_data\\HERD_BOUND_2025_RENAME.gdb"
+        herd_bounds_gdb = "/Caribou/HERD_BOUND_2025_RENAME.gdb"
         
         # Read herd boundaries
         herds_df = []
@@ -448,7 +447,7 @@ class CaribouDisturbanceAnalysis:
         print("=== Starting Caribou Protection and Dominant Disturbance Analysis ===")
         
         # Define paths
-        output_folder = "X:\\srm\\gss\\initiatives\\caribou_recovery\\projects\\gr_2025_1033_habitat_status\\deliverables\\data"
+        output_folder = "/Protection_Disturbance_2023_Update_2025"
         
         # Ensure output folder exists
         if os.path.exists(output_folder):
@@ -460,17 +459,15 @@ class CaribouDisturbanceAnalysis:
         if eco_type_value == "BOREAL":
             ecotype_configs = {
                 "name": "BOREAL",
-                "source_gdb": "\\\\spatialfiles.bcgov\\Work\\srm\\gss\\initiatives\\caribou_recovery\\projects\\gr_2025_1033_habitat_status\\deliverables\\data\\Boreal_DisturbanceProtection_2025.gdb"
-            }
-        elif eco_type_value == "NMC":
-            ecotype_configs = {
+                "source_gdb": "/Boreal_DisturbanceProtection.gdb"
+            },
+            {
                 "name": "NMC", 
-                "source_gdb": "\\\\spatialfiles.bcgov\\Work\\srm\\gss\\initiatives\\caribou_recovery\\projects\\gr_2025_1033_habitat_status\\deliverables\\data\\NMC_DisturbanceProtection_2025.gdb"
-            }
-        elif eco_type_value == "SMC_NG":
-            ecotype_configs = {
+                "source_gdb": "NMC_DisturbanceProtection.gdb"
+            },
+            {
                 "name": "SMC_NG",
-                "source_gdb": "\\\\spatialfiles.bcgov\\Work\\srm\\gss\\initiatives\\caribou_recovery\\projects\\gr_2025_1033_habitat_status\\deliverables\\data\\SMC_NG_DisturbanceProtection_2025.gdb"
+                "source_gdb": "SMC_NG_DisturbanceProtection.gdb"
             }
         
         
