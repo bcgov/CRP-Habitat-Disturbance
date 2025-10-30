@@ -11,3 +11,5 @@ As best practice do not edit the original script – keep it here and copy/paste
 The ‘flatten’ part of this script came from this source:
 https://www.esri.com/arcgis-blog/products/arcgis-desktop/analytics/more-adventures-in-overlay-counting-overlapping-polygons-with-spaghetti-and-meatballs/
 
+## Running this Tool 
+open the collections of scripts, update the .env file and run the Run_Disturbance.py. Running the Run_Disturbance script will trigger all of the functions needed from all the others 
