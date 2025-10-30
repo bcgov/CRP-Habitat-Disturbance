@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Caribou Protection and Dominant Disturbance Analysis - Python/ArcPy Version
-Converted from R script: PRO_DOM_DIST_2025_UPDATE_ALL_DU.R
+Converted from R script: PRO_DOM_DIST_2025_UPDATE_ALL_DU.R Written by Bevan Ernst, converted by CFOLKERS
 
 This script processes caribou habitat and disturbance data for different ecotypes:
 - Boreal
@@ -23,6 +23,15 @@ import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import warnings
 from datetime import datetime
+from dotenv import load_dotenv
+
+formatted_date = datetime.strftime("%Y-%m-%d")
+
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
+eco_type_value = os.getenv("ECO_TYPE")
+layer_name_list = os.getenv("LAYER_NAME").split(",")
 
 # Suppress warnings
 warnings.filterwarnings('ignore')
@@ -373,7 +382,7 @@ class CaribouDisturbanceAnalysis:
         temp_gdb_name = f"{ecotype}_DOM_DIST_TEMP.gdb"
         temp_gdb_path = os.path.join(output_folder, temp_gdb_name)
         
-        dissolve_gdb_name = f"{ecotype}_PRO_DOM_DIST_DISS.gdb"
+        dissolve_gdb_name = f"{layer_name_list}_{ecotype}_PRO_DOM_DIST_DISS_{formatted_date}.gdb"
         dissolve_gdb_path = os.path.join(output_folder, dissolve_gdb_name)
         
         # Create dissolve geodatabase
@@ -448,20 +457,22 @@ class CaribouDisturbanceAnalysis:
             os.makedirs(output_folder)
         
         # Define ecotype configurations
-        ecotype_configs = [
-            {
+        if eco_type_value == "BOREAL":
+            ecotype_configs = {
                 "name": "BOREAL",
                 "source_gdb": "\\\\spatialfiles.bcgov\\Work\\srm\\gss\\initiatives\\caribou_recovery\\projects\\gr_2025_1033_habitat_status\\deliverables\\data\\Boreal_DisturbanceProtection_2025.gdb"
             }
-            # {
-            #     "name": "NMC", 
-            #     "source_gdb": "S:/srm/smt/Workarea/JRemond/23_Disturbance_Analysis/NMC_DisturbanceProtection.gdb"
-            # },
-            # {
-            #     "name": "SMC_NG",
-            #     "source_gdb": "S:/srm/smt/Workarea/JRemond/23_Disturbance_Analysis/SMC_NG_DisturbanceProtection.gdb"
-            # }
-        ]
+        elif eco_type_value == "NMC":
+            ecotype_configs = {
+                "name": "NMC", 
+                "source_gdb": "\\\\spatialfiles.bcgov\\Work\\srm\\gss\\initiatives\\caribou_recovery\\projects\\gr_2025_1033_habitat_status\\deliverables\\data\\NMC_DisturbanceProtection_2025.gdb"
+            }
+        elif eco_type_value == "SMC_NG":
+            ecotype_configs = {
+                "name": "SMC_NG",
+                "source_gdb": "\\\\spatialfiles.bcgov\\Work\\srm\\gss\\initiatives\\caribou_recovery\\projects\\gr_2025_1033_habitat_status\\deliverables\\data\\SMC_NG_DisturbanceProtection_2025.gdb"
+            }
+        
         
         total_start = time.time()
         
