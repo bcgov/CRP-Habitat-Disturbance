@@ -27,6 +27,7 @@ import smtplib
 import socket
 import pandas as pd
 import dotenv
+from datetime import datetime
 
 root_dir=os.getenv("ROOT_DIR")
 workspace= os.path.join(root_dir, os.getenv("OUTPUT_GDB"))
@@ -789,6 +790,7 @@ def disturbance_cleanup(values, value_update, keep_list):
     arcpy.AddField_management(f"{value_update}_disturb_flat", "area_ha", "DOUBLE", "", "", "", "Area Ha")
     arcpy.CalculateField_management(f"{value_update}_disturb_flat", "area_ha", '!shape.area@HECTARES!', "PYTHON3")
 
+    time_exp=datetime.datetime.now()
     arcpy.AddField_management(f"{value_update}_disturb_flat", "analysis_date", "DATE")
     arcpy.CalculateField_management(f"{value_update}_disturb_flat", "analysis_date", '''datetime.datetime.now()''', "PYTHON3")
 ################################################################################
@@ -1046,5 +1048,6 @@ def identity(csv_dir, values, value_update, unique_value, intersect_layer, aoi_l
     arcpy.analysis.Identity('aoi', value_update + "_disturb_flat", value_update + '_disturb_identity_1')
     arcpy.analysis.Identity(value_update + '_disturb_identity_1', value_update + "_disturb_buffer_flat", 
                             value_update + '_flat')
+
 
     arcpy.TableToTable_conversion("{}_flat".format(value_update), csv_dir, "{}_flat.csv".format(value_update))
